@@ -125,6 +125,15 @@ class BuildTool {
 
 const buildTools = [
   new BuildTool(
+    "Mako " + require('@umijs/mako/package.json').version,
+    3000,
+    "start:mako",
+    /in (.+)ms/,
+    "build:mako",
+    /in (.+)(s|ms)/,
+    "@umijs/mako/bin/mako.js"
+  ),
+  new BuildTool(
     "Farm " + require('@farmfe/core/package.json').version,
     9000,
     "start",
@@ -205,121 +214,122 @@ async function runBenchmark() {
   const results = {};
 
   for (const buildTool of buildTools) {
-    const time = await buildTool.startServer();
-    const page = await browser.newPage();
-    const start = Date.now();
+    // const time = await buildTool.startServer();
+    // const page = await browser.newPage();
+    // const start = Date.now();
 
-    page.on("load", () => {
-      const loadTime = Date.now() - start;
-      console.log(
-        buildTool.name,
-        ": startup time: " + (time + loadTime) + "ms"
-      );
+    // page.on("load", () => {
+    //   const loadTime = Date.now() - start;
+    //   console.log(
+    //     buildTool.name,
+    //     ": startup time: " + (time + loadTime) + "ms"
+    //   );
 
-      if (!results[buildTool.name]) {
-        results[buildTool.name] = {};
-      }
+    //   if (!results[buildTool.name]) {
+    //     results[buildTool.name] = {};
+    //   }
 
-      results[buildTool.name]["startup(serverStartTime + onLoadTime)"] =
-        time + loadTime;
-      // results[buildTool.name].serverStartTime = time;
-      // results[buildTool.name].onLoadTime = loadTime;
-    });
+    //   results[buildTool.name]["startup(serverStartTime + onLoadTime)"] =
+    //     time + loadTime;
+    //   // results[buildTool.name].serverStartTime = time;
+    //   // results[buildTool.name].onLoadTime = loadTime;
+    // });
 
-    console.log("Navigating to", `http://localhost:${buildTool.port}`);
+    // console.log("Navigating to", `http://localhost:${buildTool.port}`);
 
-    await page.goto(`http://localhost:${buildTool.port}`, {
-      timeout: 60000,
-    });
+    // await page.goto(`http://localhost:${buildTool.port}`, {
+    //   timeout: 60000,
+    // });
 
-    let waitResolve = null;
-    const waitPromise = new Promise((resolve) => {
-      waitResolve = resolve;
-    });
+    // let waitResolve = null;
+    // const waitPromise = new Promise((resolve) => {
+    //   waitResolve = resolve;
+    // });
 
-    let hmrRootStart = -1;
-    let hmrLeafStart = -1;
+    // let hmrRootStart = -1;
+    // let hmrLeafStart = -1;
 
-    page.on("console", (event) => {
-      const isFinished = () => {
-        return (
-          results[buildTool.name]?.rootHmr && results[buildTool.name]?.leafHmr
-        );
-      };
-      if (event.text().includes("root hmr")) {
-        const clientDateNow = /(\d+)/.exec(event.text())[1];
-        const hmrTime = clientDateNow - hmrRootStart;
-        console.log(buildTool.name, " Root HMR time: " + hmrTime + "ms");
+    // page.on("console", (event) => {
+    //   const isFinished = () => {
+    //     return (
+    //       results[buildTool.name]?.rootHmr && results[buildTool.name]?.leafHmr
+    //     );
+    //   };
+    //   if (event.text().includes("root hmr")) {
+    //     const clientDateNow = /(\d+)/.exec(event.text())[1];
+    //     const hmrTime = clientDateNow - hmrRootStart;
+    //     console.log(buildTool.name, " Root HMR time: " + hmrTime + "ms");
 
-        results[buildTool.name].rootHmr = hmrTime;
-        if (isFinished()) {
-          page.close();
-          waitResolve();
-        }
-      } else if (event.text().includes("leaf hmr")) {
-        const hmrTime = Date.now() - hmrLeafStart;
-        console.log(buildTool.name, " Leaf HMR time: " + hmrTime + "ms");
-        results[buildTool.name].leafHmr = hmrTime;
-        if (isFinished()) {
-          page.close();
-          waitResolve();
-        }
-      }
-    });
+    //     results[buildTool.name].rootHmr = hmrTime;
+    //     if (isFinished()) {
+    //       page.close();
+    //       waitResolve();
+    //     }
+    //   } else if (event.text().includes("leaf hmr")) {
+    //     const hmrTime = Date.now() - hmrLeafStart;
+    //     console.log(buildTool.name, " Leaf HMR time: " + hmrTime + "ms");
+    //     results[buildTool.name].leafHmr = hmrTime;
+    //     if (isFinished()) {
+    //       page.close();
+    //       waitResolve();
+    //     }
+    //   }
+    // });
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    const originalRootFileContent = readFileSync(
-      path.resolve("src", "comps", "triangle.jsx"),
-      "utf-8"
-    );
+    // await new Promise((resolve) => setTimeout(resolve, 1000));
+    // const originalRootFileContent = readFileSync(
+    //   path.resolve("src", "comps", "triangle.jsx"),
+    //   "utf-8"
+    // );
 
-    appendFile(
-      path.resolve("src", "comps", "triangle.jsx"),
-      `
-    console.log('root hmr', Date.now());
-    `,
-      (err) => {
-        if (err) throw err;
-        hmrRootStart = Date.now();
-      }
-    );
+    // appendFile(
+    //   path.resolve("src", "comps", "triangle.jsx"),
+    //   `
+    // console.log('root hmr', Date.now());
+    // `,
+    //   (err) => {
+    //     if (err) throw err;
+    //     hmrRootStart = Date.now();
+    //   }
+    // );
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    const originalLeafFileContent = readFileSync(
-      path.resolve("src", "comps", "triangle_1_1_2_1_2_2_1.jsx"),
-      "utf-8"
-    );
-    appendFile(
-      path.resolve("src", "comps", "triangle_1_1_2_1_2_2_1.jsx"),
-      `
-      console.log('leaf hmr', Date.now());
-      `,
-      (err) => {
-        if (err) throw err;
-        hmrLeafStart = Date.now();
-      }
-    );
+    // const originalLeafFileContent = readFileSync(
+    //   path.resolve("src", "comps", "triangle_1_1_2_1_2_2_1.jsx"),
+    //   "utf-8"
+    // );
+    // appendFile(
+    //   path.resolve("src", "comps", "triangle_1_1_2_1_2_2_1.jsx"),
+    //   `
+    //   console.log('leaf hmr', Date.now());
+    //   `,
+    //   (err) => {
+    //     if (err) throw err;
+    //     hmrLeafStart = Date.now();
+    //   }
+    // );
 
-    await waitPromise;
+    // await waitPromise;
 
-    // restore files
-    writeFileSync(
-      path.resolve("src", "comps", "triangle.jsx"),
-      originalRootFileContent
-    );
-    writeFileSync(
-      path.resolve("src", "comps", "triangle_1_1_2_1_2_2_1.jsx"),
-      originalLeafFileContent
-    );
+    // // restore files
+    // writeFileSync(
+    //   path.resolve("src", "comps", "triangle.jsx"),
+    //   originalRootFileContent
+    // );
+    // writeFileSync(
+    //   path.resolve("src", "comps", "triangle_1_1_2_1_2_2_1.jsx"),
+    //   originalLeafFileContent
+    // );
 
-    buildTool.stopServer();
+    // buildTool.stopServer();
 
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    console.log("close Server");
+    // await new Promise((resolve) => setTimeout(resolve, 500));
+    // console.log("close Server");
     console.log("prepare build");
     const buildTime = await buildTool.build();
     console.log(buildTool.name, ": build time: " + buildTime + "ms");
+    results[buildTool.name] ||= {};
     results[buildTool.name].buildTime = buildTime;
     await new Promise((resolve) => setTimeout(resolve, 500));
   }

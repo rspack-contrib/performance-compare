@@ -10,6 +10,7 @@ module.exports = {
   entry: {
     main: "./src/index.tsx",
   },
+  devtool: false,
   watchOptions: {
     poll: 0,
     aggregateTimeout: 0,
